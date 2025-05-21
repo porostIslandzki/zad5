@@ -25,13 +25,35 @@ public abstract class HibernateUserRepository implements UserRepository {
 
     @Override
     public User save(User user) {
-        session.persist(user);
-        return user;
+        try {
+            if (!session.getTransaction().isActive()) {
+                session.beginTransaction();
+            }
+
+            session.persist(user);
+            session.getTransaction().commit();
+            return user;
+        } catch (Exception e) {
+            if (session.getTransaction().isActive()) {
+                session.getTransaction().rollback();
+            }
+            throw new RuntimeException("brak", e);
+        }
     }
+
 
     @Override
     public void delete(String id) {
-        Optional<User> u = findById(id);
-        if (u != null) session.remove(u);
+        try{
+            User user = session.get(User.class, id);
+            if(user != null){
+                session.beginTransaction();
+                session.remove(user);
+                session.getTransaction().commit();
+            }
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw new RuntimeException("brak", e);
+        }
     }
 }

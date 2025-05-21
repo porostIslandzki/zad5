@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import java.util.List;
 import java.util.Optional;
 
+
 public abstract class HibernateVehicleRepository implements VehicleRepository {
 
     private final Session session;
@@ -25,13 +26,29 @@ public abstract class HibernateVehicleRepository implements VehicleRepository {
 
     @Override
     public Vehicle save(Vehicle vehicle) {
-        session.persist(vehicle);
-        return vehicle;
+        try {
+            session.beginTransaction();
+            session.persist(vehicle);
+            session.getTransaction().commit();
+            return vehicle;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw new RuntimeException("Nie udało się zapisać pojazdu", e);
+        }
     }
 
     @Override
     public void delete(String id) {
-        Optional<Vehicle> v = findById(id);
-        if (v.isPresent()) session.remove(v);
+        try {
+            Vehicle vehicle = session.get(Vehicle.class, id);
+            if (vehicle != null) {
+                session.beginTransaction();
+                session.remove(vehicle);
+                session.getTransaction().commit();
+            }
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw new RuntimeException("Nie udało się usunąć pojazdu", e);
+        }
     }
 }

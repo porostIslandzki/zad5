@@ -9,6 +9,15 @@ public abstract class HibernateRentalRepository implements RentalRepository {
 
     private final Session session;
 
+    //dodanie transakcji
+    @Override
+    public Rental save(Rental rental){
+        session.beginTransaction();
+        session.persist(rental);
+        session.getTransaction().commit();
+        return rental;
+    }
+
     public HibernateRentalRepository(Session session) {
         this.session = session;
     }
@@ -23,15 +32,15 @@ public abstract class HibernateRentalRepository implements RentalRepository {
         return session.createQuery("from Rental", Rental.class).list();
     }
 
-    @Override
-    public Rental save(Rental rental) {
-        session.persist(rental);
-        return rental;
-    }
 
     @Override
     public void delete(String id) {
-        Optional<Rental> r = findById(id);
-        if (r.isPresent()) session.remove(r);
+        Rental rental =
+                session.get(Rental.class, id);
+        if(rental != null){
+            session.beginTransaction();
+            session.remove(rental);
+            session.getTransaction().commit();
+        }
     }
 }

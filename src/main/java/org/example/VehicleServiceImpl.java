@@ -34,7 +34,7 @@ public class VehicleServiceImpl implements VehicleService {
     }
     @Override
     public List<Vehicle> listAvailableVehicles() {
-        return vehicleRepository.findAll(); // lub jak chcesz: z filtrem, np. tylko dostępne
+        return vehicleRepository.findAll();
     }
 
 }
